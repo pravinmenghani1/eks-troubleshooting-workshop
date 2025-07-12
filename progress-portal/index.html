@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EKS Troubleshooting Workshop - Progress Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🚀 EKS Troubleshooting Workshop</h1>
+                    <p>Progress Portal - Track Your Debugging Journey</p>
+                </div>
+                <div class="cluster-status" id="clusterStatus">
+                    <div class="status-indicator" id="statusIndicator">
+                        <i class="fas fa-circle"></i>
+                        <span id="statusText">Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Overview -->
+        <section class="progress-overview">
+            <div class="progress-card">
+                <h2>🎯 Workshop Progress</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overallProgress"></div>
+                </div>
+                <div class="progress-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="completedScenarios">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="totalScenarios">5</span>
+                        <span class="stat-label">Total Scenarios</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="timeSpent">0</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scenarios Grid -->
+        <section class="scenarios-grid">
+            <!-- Pod Startup Failures -->
+            <div class="scenario-card" data-scenario="pod-startup-failures">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🐛</div>
+                    <div class="scenario-info">
+                        <h3>Pod Startup Failures</h3>
+                        <div class="difficulty">⭐⭐⭐</div>
+                    </div>
+                    <div class="scenario-status" id="status-pod-startup-failures">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="scenario-progress">
+                    <div class="progress-bar small">
+                        <div class="progress-fill" id="progress-pod-startup-failures"></div>
+                    </div>
+                    <span class="progress-text" id="text-pod-startup-failures">Not Started</span>
+                </div>
+                <div class="scenario-details">
+                    <div class="detail-item">
+                        <span class="label">Issues Fixed:</span>
+                        <span class="value" id="issues-pod-startup-failures">0/5</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">30 min</span>
+                    </div>
+                </div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary" onclick="startScenario('pod-startup-failures')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                    <button class="btn btn-secondary" onclick="checkStatus('pod-startup-failures')">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+            </div>
+
+            <!-- DNS Resolution Issues -->
+            <div class="scenario-card" data-scenario="dns-issues">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🌐</div>
+                    <div class="scenario-info">
+                        <h3>DNS Resolution Apocalypse</h3>
+                        <div class="difficulty">⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="scenario-status" id="status-dns-issues">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="scenario-progress">
+                    <div class="progress-bar small">
+                        <div class="progress-fill" id="progress-dns-issues"></div>
+                    </div>
+                    <span class="progress-text" id="text-dns-issues">Not Started</span>
+                </div>
+                <div class="scenario-details">
+                    <div class="detail-item">
+                        <span class="label">Issues Fixed:</span>
+                        <span class="value" id="issues-dns-issues">0/3</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">25 min</span>
+                    </div>
+                </div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary" onclick="startScenario('dns-issues')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                    <button class="btn btn-secondary" onclick="checkStatus('dns-issues')">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+            </div>
+
+            <!-- RBAC Issues -->
+            <div class="scenario-card" data-scenario="rbac-issues">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🔐</div>
+                    <div class="scenario-info">
+                        <h3>RBAC Permission Nightmare</h3>
+                        <div class="difficulty">⭐⭐⭐</div>
+                    </div>
+                    <div class="scenario-status" id="status-rbac-issues">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="scenario-progress">
+                    <div class="progress-bar small">
+                        <div class="progress-fill" id="progress-rbac-issues"></div>
+                    </div>
+                    <span class="progress-text" id="text-rbac-issues">Not Started</span>
+                </div>
+                <div class="scenario-details">
+                    <div class="detail-item">
+                        <span class="label">Issues Fixed:</span>
+                        <span class="value" id="issues-rbac-issues">0/2</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">20 min</span>
+                    </div>
+                </div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary" onclick="startScenario('rbac-issues')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                    <button class="btn btn-secondary" onclick="checkStatus('rbac-issues')">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+            </div>
+
+            <!-- Node Health Crisis -->
+            <div class="scenario-card" data-scenario="node-not-ready">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🖥️</div>
+                    <div class="scenario-info">
+                        <h3>Node Health Crisis</h3>
+                        <div class="difficulty">⭐⭐⭐⭐⭐</div>
+                    </div>
+                    <div class="scenario-status" id="status-node-not-ready">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="scenario-progress">
+                    <div class="progress-bar small">
+                        <div class="progress-fill" id="progress-node-not-ready"></div>
+                    </div>
+                    <span class="progress-text" id="text-node-not-ready">Not Started</span>
+                </div>
+                <div class="scenario-details">
+                    <div class="detail-item">
+                        <span class="label">Issues Fixed:</span>
+                        <span class="value" id="issues-node-not-ready">0/4</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">35 min</span>
+                    </div>
+                </div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary" onclick="startScenario('node-not-ready')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                    <button class="btn btn-secondary" onclick="checkStatus('node-not-ready')">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+            </div>
+
+            <!-- Image Pull Errors -->
+            <div class="scenario-card" data-scenario="image-pull-errors">
+                <div class="scenario-header">
+                    <div class="scenario-icon">📦</div>
+                    <div class="scenario-info">
+                        <h3>Image Registry Disasters</h3>
+                        <div class="difficulty">⭐⭐</div>
+                    </div>
+                    <div class="scenario-status" id="status-image-pull-errors">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="scenario-progress">
+                    <div class="progress-bar small">
+                        <div class="progress-fill" id="progress-image-pull-errors"></div>
+                    </div>
+                    <span class="progress-text" id="text-image-pull-errors">Not Started</span>
+                </div>
+                <div class="scenario-details">
+                    <div class="detail-item">
+                        <span class="label">Issues Fixed:</span>
+                        <span class="value" id="issues-image-pull-errors">0/2</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">15 min</span>
+                    </div>
+                </div>
+                <div class="scenario-actions">
+                    <button class="btn btn-primary" onclick="startScenario('image-pull-errors')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                    <button class="btn btn-secondary" onclick="checkStatus('image-pull-errors')">
+                        <i class="fas fa-search"></i> Check
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Commands Panel -->
+        <section class="commands-panel">
+            <div class="panel-header">
+                <h3>🛠️ Quick Commands</h3>
+                <button class="btn btn-small" onclick="toggleCommands()">
+                    <i class="fas fa-chevron-down" id="commandsToggle"></i>
+                </button>
+            </div>
+            <div class="commands-content" id="commandsContent">
+                <div class="command-group">
+                    <h4>Cluster Management</h4>
+                    <div class="command-item">
+                        <code>./cluster-setup.sh</code>
+                        <span>Create EKS cluster</span>
+                    </div>
+                    <div class="command-item">
+                        <code>./cleanup-cluster.sh</code>
+                        <span>Delete cluster</span>
+                    </div>
+                </div>
+                <div class="command-group">
+                    <h4>Scenario Management</h4>
+                    <div class="command-item">
+                        <code>./scenario-manager.sh list</code>
+                        <span>List all scenarios</span>
+                    </div>
+                    <div class="command-item">
+                        <code>./scenario-manager.sh run &lt;scenario&gt; inject</code>
+                        <span>Start scenario</span>
+                    </div>
+                    <div class="command-item">
+                        <code>./scenario-manager.sh run &lt;scenario&gt; restore</code>
+                        <span>Fix scenario</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>🚀 EKS Troubleshooting Workshop - Visual Edition</p>
+                <p>Last updated: <span id="lastUpdated">Never</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

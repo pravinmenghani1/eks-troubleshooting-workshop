@@ -16,7 +16,13 @@
 ```bash
 ./scenario-manager.sh
 ```
-*Launches the interactive mission control center with full visual experience!*
+*Launches the interactive mission control center with progress portal!*
+
+### 📊 **Progress Portal Only**
+```bash
+./launch-portal.sh
+```
+*Opens the web-based progress dashboard at http://localhost:8080*
 
 ### ⚡ **Speed Run**
 ```bash

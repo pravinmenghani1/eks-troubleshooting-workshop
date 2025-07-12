@@ -9,7 +9,7 @@ set -e
 CLUSTER_NAME="eks-troubleshooting-workshop"
 REGION="us-west-2"
 NODE_GROUP_NAME="workshop-nodes"
-KUBERNETES_VERSION="1.28"
+KUBERNETES_VERSION="1.33"
 
 # Colors for output
 RED='\033[0;31m'
@@ -100,6 +100,7 @@ nodeGroups:
     minSize: 2
     maxSize: 5
     volumeSize: 20
+    amiFamily: AmazonLinux2023
     ssh:
       allow: false
     iam:

@@ -29,11 +29,14 @@ Transform your EKS debugging skills through hands-on scenarios with stunning vis
 git clone https://github.com/pravinmenghani1/eks-troubleshooting-workshop.git
 cd eks-troubleshooting-workshop
 
-# Launch the visual experience
+# Launch the visual experience with progress portal
 ./scenario-manager.sh
+
+# Or launch just the progress portal
+./launch-portal.sh
 ```
 
-**That's it!** The interactive mission control center will guide you through everything! 🚀
+**That's it!** The interactive mission control center and progress portal will guide you through everything! 🚀
 
 ## 🌟 What Makes This Workshop Special?
 
@@ -82,6 +85,7 @@ cd eks-troubleshooting-workshop
 │                    WORKSHOP COMPONENTS                      │
 │                                                             │
 │  🎮 scenario-manager.sh     ← Interactive Mission Control  │
+│  📊 launch-portal.sh        ← Progress Portal Launcher     │
 │  🏗️ cluster-setup.sh        ← EKS Cluster Creation        │
 │  🔧 troubleshooting-toolkit ← Health Check & Diagnostics   │
 │  🧹 cleanup-cluster.sh      ← Complete Cleanup             │
@@ -91,6 +95,11 @@ cd eks-troubleshooting-workshop
 │  ├─ 🌐 dns-issues                                          │
 │  ├─ 🔐 rbac-issues                                         │
 │  └─ ... more scenarios                                     │
+│                                                             │
+│  📊 progress-portal/        ← Web-based Progress Dashboard │
+│  ├─ index.html             ← Portal Interface              │
+│  ├─ styles.css             ← Visual Styling                │
+│  └─ script.js              ← Interactive Features          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -169,6 +178,29 @@ By completing this workshop, you'll master:
 - **Difficulty Ratings** - Star-based challenge levels  
 - **Victory Celebrations** - Animated success messages
 - **Progress Tracking** - Visual completion status
+- **Real-time Portal** - Web-based progress dashboard
+
+## 📊 Progress Portal
+
+Experience real-time progress tracking with our web-based portal:
+
+### 🌟 **Portal Features**
+- **Live Progress Tracking** - See your completion status in real-time
+- **Scenario Status** - Visual indicators for each challenge
+- **Time Tracking** - Monitor how long you've been working
+- **Cluster Status** - Real-time cluster health monitoring
+- **Quick Commands** - Easy access to common kubectl commands
+
+### 🚀 **Launch Portal**
+```bash
+# Start the progress portal
+./launch-portal.sh
+
+# Or launch automatically with interactive mode
+./scenario-manager.sh
+```
+
+The portal runs locally on `http://localhost:8080` and provides a beautiful dashboard to track your troubleshooting journey!
 
 ## 🔧 Advanced Usage
 
@@ -185,6 +217,9 @@ By completing this workshop, you'll master:
 
 # Restore/fix scenario
 ./scenario-manager.sh run rbac-issues restore
+
+# Launch progress portal
+./scenario-manager.sh portal
 
 # Complete cleanup
 ./scenario-manager.sh cleanup

@@ -323,7 +323,43 @@ check_scenario_status() {
     esac
 }
 
-# Enhanced cleanup with visual feedback
+# Progress portal functions
+launch_progress_portal() {
+    print_section_header "📊 LAUNCHING PROGRESS PORTAL"
+    
+    if [ -f "./launch-portal.sh" ]; then
+        print_success "Starting progress portal..."
+        echo -e "${CYAN}The progress portal will help you track your workshop progress!${NC}"
+        echo -e "${YELLOW}Keep the portal open in your browser while working on scenarios.${NC}"
+        echo ""
+        ./launch-portal.sh
+    else
+        print_warning "Progress portal launcher not found"
+        print_info "You can still use the workshop without the portal"
+    fi
+}
+
+launch_progress_portal_if_needed() {
+    # Check if portal is already running on common ports
+    local portal_running=false
+    for port in 8080 8081 8082 3000 3001; do
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            portal_running=true
+            break
+        fi
+    done
+    
+    if [ "$portal_running" = false ]; then
+        echo -e "${CYAN}${BOLD}🚀 Would you like to launch the Progress Portal? (y/n):${NC} "
+        read -r launch_portal
+        if [[ "$launch_portal" =~ ^[Yy]$ ]]; then
+            echo -e "${GREEN}Launching progress portal in background...${NC}"
+            nohup ./launch-portal.sh > /dev/null 2>&1 &
+            sleep 2
+            print_success "Progress portal started! Check your browser."
+        fi
+    fi
+}
 cleanup_all() {
     print_section_header "🧹 COMPLETE WORKSHOP CLEANUP"
     
@@ -464,6 +500,7 @@ ${YELLOW}${BOLD}COMMANDS:${NC}
   ${GREEN}status <scenario>${NC}             📊 Check status of a scenario
   ${GREEN}cleanup${NC}                       🧹 Clean up all scenarios
   ${GREEN}interactive${NC}                   🎮 Start interactive mode (recommended)
+  ${GREEN}portal${NC}                        📊 Launch progress portal
   ${GREEN}help${NC}                          ❓ Show this help message
 
 ${YELLOW}${BOLD}SCENARIOS:${NC}
@@ -488,6 +525,7 @@ ${YELLOW}${BOLD}EXAMPLES:${NC}
   ${CYAN}$0 run pod-startup-failures inject${NC}    💥 Start pod startup scenario
   ${CYAN}$0 run dns-issues restore${NC}             🏥 Fix DNS issues scenario
   ${CYAN}$0 status pod-startup-failures${NC}        📊 Check pod scenario status
+  ${CYAN}$0 portal${NC}                             📊 Launch progress portal
   ${CYAN}$0 interactive${NC}                        🎮 Launch mission control center
 
 ${YELLOW}${BOLD}PREREQUISITES:${NC}
@@ -537,7 +575,12 @@ main() {
         "interactive")
             # Check cluster connectivity for interactive mode
             check_cluster
+            # Launch progress portal if not already running
+            launch_progress_portal_if_needed
             interactive_mode
+            ;;
+        "portal")
+            launch_progress_portal
             ;;
         "help"|"-h"|"--help")
             show_help

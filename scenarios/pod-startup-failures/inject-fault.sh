@@ -26,6 +26,23 @@ BUG="🐛"
 FIRE="🔥"
 MAGNIFYING="🔍"
 
+# Utility functions for colored output
+print_header() {
+    echo -e "${BLUE}=== $1 ===${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
 # Create namespace for the scenario
 create_namespace() {
     print_header "Creating Scenario Namespace"

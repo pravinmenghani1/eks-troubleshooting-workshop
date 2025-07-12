@@ -1,0 +1,109 @@
+---
+# Service to test internal DNS resolution
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: default
+spec:
+  selector:
+    app: test-app
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+# Deployment that tests DNS resolution
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-test-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+
+---
+# Pod that performs DNS tests
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dns-tester
+  namespace: default
+spec:
+  containers:
+  - name: dns-test
+    image: busybox:latest
+    command: ["sh", "-c"]
+    args:
+    - |
+      while true; do
+        echo "=== DNS Resolution Tests ==="
+        echo "Testing internal service discovery:"
+        nslookup test-service.default.svc.cluster.local || echo "FAILED: Internal service DNS"
+        
+        echo "Testing Kubernetes API DNS:"
+        nslookup kubernetes.default.svc.cluster.local || echo "FAILED: Kubernetes API DNS"
+        
+        echo "Testing external DNS:"
+        nslookup google.com || echo "FAILED: External DNS"
+        
+        echo "Testing short name resolution:"
+        nslookup test-service || echo "FAILED: Short name DNS"
+        
+        echo "=== End Tests ==="
+        sleep 60
+      done
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+
+---
+# Pod with custom DNS policy (for testing different configurations)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: custom-dns-pod
+  namespace: default
+spec:
+  dnsPolicy: "None"
+  dnsConfig:
+    nameservers:
+    - 8.8.8.8
+    - 8.8.4.4
+    searches:
+    - default.svc.cluster.local
+    - svc.cluster.local
+    - cluster.local
+    options:
+    - name: ndots
+      value: "2"
+    - name: edns0
+  containers:
+  - name: test
+    image: busybox:latest
+    command: ["sleep", "3600"]

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-pull-demo
+  labels:
+    app: image-pull-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: image-pull-demo
+  template:
+    metadata:
+      labels:
+        app: image-pull-demo
+    spec:
+      containers:
+      - name: private-app
+        image: private-registry.example.com/myapp:v1.0.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      - name: nonexistent-image
+        image: nginx:this-tag-does-not-exist
+        ports:
+        - containerPort: 80

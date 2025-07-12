@@ -1,0 +1,86 @@
+---
+# Service Account with limited permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: limited-sa
+  namespace: default
+
+---
+# Role with insufficient permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]  # Missing "list" permission
+
+---
+# RoleBinding (commented out to simulate missing binding)
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: pod-reader-binding
+#   namespace: default
+# subjects:
+# - kind: ServiceAccount
+#   name: limited-sa
+#   namespace: default
+# roleRef:
+#   kind: Role
+#   name: pod-reader
+#   apiGroup: rbac.authorization.k8s.io
+
+---
+# Pod that tries to access Kubernetes API
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-access-pod
+  namespace: default
+spec:
+  serviceAccountName: limited-sa
+  containers:
+  - name: kubectl-container
+    image: bitnami/kubectl:latest
+    command: ["sleep", "3600"]
+    env:
+    - name: KUBERNETES_SERVICE_HOST
+      value: "kubernetes.default.svc"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "443"
+
+---
+# Deployment that needs to create/manage pods (will fail)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-manager
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-manager
+  template:
+    metadata:
+      labels:
+        app: pod-manager
+    spec:
+      serviceAccountName: limited-sa
+      containers:
+      - name: manager
+        image: bitnami/kubectl:latest
+        command: ["sh", "-c"]
+        args:
+        - |
+          while true; do
+            echo "Trying to list pods..."
+            kubectl get pods
+            echo "Trying to create a pod..."
+            kubectl run test-pod-$RANDOM --image=nginx --restart=Never
+            sleep 30
+          done

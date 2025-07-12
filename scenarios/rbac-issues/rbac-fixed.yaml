@@ -1,0 +1,69 @@
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-manager-sa
+  namespace: default
+
+---
+# Role with proper permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-manager-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding to connect service account with role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-manager-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: pod-manager-sa
+  namespace: default
+roleRef:
+  kind: Role
+  name: pod-manager-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Working deployment with proper permissions
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: working-pod-manager
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: working-pod-manager
+  template:
+    metadata:
+      labels:
+        app: working-pod-manager
+    spec:
+      serviceAccountName: pod-manager-sa
+      containers:
+      - name: manager
+        image: bitnami/kubectl:latest
+        command: ["sh", "-c"]
+        args:
+        - |
+          while true; do
+            echo "Successfully listing pods:"
+            kubectl get pods
+            echo "Pod operations completed successfully"
+            sleep 60
+          done

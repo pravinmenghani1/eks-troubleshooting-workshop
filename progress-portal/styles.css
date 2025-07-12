@@ -279,27 +279,30 @@ body {
 
 .scenario-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    flex: 1;
+    justify-content: center;
+    min-width: 70px;
 }
 
 .btn-primary {
     background: linear-gradient(45deg, #667eea, #764ba2);
     color: white;
-    flex: 1;
 }
 
 .btn-primary:hover {
@@ -316,6 +319,18 @@ body {
 .btn-secondary:hover {
     background: #e9ecef;
     color: #495057;
+}
+
+.btn-hint {
+    background: linear-gradient(45deg, #ffc107, #ff8f00);
+    color: white;
+    border: none;
+}
+
+.btn-hint:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+    background: linear-gradient(45deg, #ffb300, #ff6f00);
 }
 
 .btn-small {

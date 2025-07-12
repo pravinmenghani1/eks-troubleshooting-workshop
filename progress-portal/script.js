@@ -217,6 +217,263 @@ class WorkshopProgressTracker {
         this.showCommand(`./scenario-manager.sh status ${scenarioName}`);
     }
     
+    showHints(scenarioName) {
+        this.showCommand(`./scenario-manager.sh hint ${scenarioName}`);
+        
+        // Show hints in a modal-like overlay
+        this.displayHintsModal(scenarioName);
+    }
+    
+    displayHintsModal(scenarioName) {
+        // Create hints modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        `;
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 5px;
+        `;
+        closeBtn.onclick = () => document.body.removeChild(modal);
+        
+        content.innerHTML = this.getHintsContent(scenarioName);
+        content.appendChild(closeBtn);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Close on background click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        };
+    }
+    
+    getHintsContent(scenarioName) {
+        const hintsData = {
+            'pod-startup-failures': {
+                title: '🐛 Pod Startup Failures - Progressive Hints',
+                levels: [
+                    {
+                        title: 'Level 1 Hints (Start Here)',
+                        hints: [
+                            'Always start with <code>kubectl get pods -A</code> to see the overall status',
+                            'Look for pods in "Pending", "ImagePullBackOff", or "CrashLoopBackOff" states',
+                            'Use <code>kubectl describe pod &lt;pod-name&gt;</code> to get detailed information'
+                        ]
+                    },
+                    {
+                        title: 'Level 2 Hints (If Still Stuck)',
+                        hints: [
+                            'Check events with <code>kubectl get events --sort-by=.metadata.creationTimestamp</code>',
+                            'For ImagePullBackOff: Check image name, registry access, and credentials',
+                            'For Pending pods: Check node resources with <code>kubectl top nodes</code>',
+                            'For CrashLoopBackOff: Check logs with <code>kubectl logs &lt;pod-name&gt;</code>'
+                        ]
+                    },
+                    {
+                        title: 'Level 3 Hints (Deep Debugging)',
+                        hints: [
+                            'Check resource requests/limits in pod specifications',
+                            'Verify secrets exist: <code>kubectl get secrets</code>',
+                            'Check node selectors and taints: <code>kubectl describe nodes</code>',
+                            'For persistent issues, check admission controllers and policies'
+                        ]
+                    }
+                ]
+            },
+            'dns-issues': {
+                title: '🌐 DNS Resolution Apocalypse - Progressive Hints',
+                levels: [
+                    {
+                        title: 'Level 1 Hints (Start Here)',
+                        hints: [
+                            'Test DNS resolution: <code>kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup kubernetes.default</code>',
+                            'Check CoreDNS pods: <code>kubectl get pods -n kube-system -l k8s-app=kube-dns</code>',
+                            'Look at CoreDNS logs: <code>kubectl logs -n kube-system -l k8s-app=kube-dns</code>'
+                        ]
+                    },
+                    {
+                        title: 'Level 2 Hints (If Still Stuck)',
+                        hints: [
+                            'Check CoreDNS config: <code>kubectl get configmap coredns -n kube-system -o yaml</code>',
+                            'Verify service endpoints: <code>kubectl get endpoints</code>',
+                            'Test service discovery: <code>kubectl run test --image=busybox --rm -it --restart=Never -- nslookup &lt;service-name&gt;</code>',
+                            'Check network policies: <code>kubectl get networkpolicies -A</code>'
+                        ]
+                    },
+                    {
+                        title: 'Level 3 Hints (Deep Debugging)',
+                        hints: [
+                            'Check kube-dns service: <code>kubectl get svc kube-dns -n kube-system</code>',
+                            'Verify DNS policy in pods: Look for "dnsPolicy" in pod specs',
+                            'Check cluster DNS settings: <code>kubectl get nodes -o yaml | grep -A 5 -B 5 dns</code>',
+                            'Test external DNS: <code>kubectl run test --image=busybox --rm -it --restart=Never -- nslookup google.com</code>'
+                        ]
+                    }
+                ]
+            },
+            'rbac-issues': {
+                title: '🔐 RBAC Permission Nightmare - Progressive Hints',
+                levels: [
+                    {
+                        title: 'Level 1 Hints (Start Here)',
+                        hints: [
+                            'Test permissions: <code>kubectl auth can-i &lt;verb&gt; &lt;resource&gt;</code>',
+                            'Check what you can do: <code>kubectl auth can-i --list</code>',
+                            'Look for "Forbidden" errors in kubectl output'
+                        ]
+                    },
+                    {
+                        title: 'Level 2 Hints (If Still Stuck)',
+                        hints: [
+                            'Check service accounts: <code>kubectl get serviceaccounts -A</code>',
+                            'List roles and role bindings: <code>kubectl get roles,rolebindings -A</code>',
+                            'Check cluster roles: <code>kubectl get clusterroles,clusterrolebindings</code>',
+                            'Test as specific user: <code>kubectl auth can-i &lt;verb&gt; &lt;resource&gt; --as=&lt;user&gt;</code>'
+                        ]
+                    },
+                    {
+                        title: 'Level 3 Hints (Deep Debugging)',
+                        hints: [
+                            'Describe role bindings: <code>kubectl describe rolebinding &lt;binding-name&gt;</code>',
+                            'Check pod service account: <code>kubectl get pod &lt;pod-name&gt; -o yaml | grep serviceAccount</code>',
+                            'Verify service account tokens: <code>kubectl describe serviceaccount &lt;sa-name&gt;</code>',
+                            'Check for missing subjects in role bindings'
+                        ]
+                    }
+                ]
+            },
+            'node-not-ready': {
+                title: '🖥️ Node Health Crisis - Progressive Hints',
+                levels: [
+                    {
+                        title: 'Level 1 Hints (Start Here)',
+                        hints: [
+                            'Check node status: <code>kubectl get nodes</code>',
+                            'Look for "NotReady" or "Unknown" node states',
+                            'Check node details: <code>kubectl describe node &lt;node-name&gt;</code>'
+                        ]
+                    },
+                    {
+                        title: 'Level 2 Hints (If Still Stuck)',
+                        hints: [
+                            'Check node resources: <code>kubectl top nodes</code>',
+                            'Look at node conditions in <code>kubectl describe node</code> output',
+                            'Check kubelet logs on the node (if accessible)',
+                            'Verify node capacity vs allocatable resources'
+                        ]
+                    },
+                    {
+                        title: 'Level 3 Hints (Deep Debugging)',
+                        hints: [
+                            'Check for resource pressure: disk, memory, PID pressure',
+                            'Look for taints: <code>kubectl describe node | grep -A 5 Taints</code>',
+                            'Check pod distribution: <code>kubectl get pods -A -o wide</code>',
+                            'Verify cluster autoscaler logs if using autoscaling'
+                        ]
+                    }
+                ]
+            },
+            'image-pull-errors': {
+                title: '📦 Image Registry Disasters - Progressive Hints',
+                levels: [
+                    {
+                        title: 'Level 1 Hints (Start Here)',
+                        hints: [
+                            'Look for "ImagePullBackOff" or "ErrImagePull" pod status',
+                            'Check the exact error: <code>kubectl describe pod &lt;pod-name&gt;</code>',
+                            'Verify the image name and tag in the pod specification'
+                        ]
+                    },
+                    {
+                        title: 'Level 2 Hints (If Still Stuck)',
+                        hints: [
+                            'Check if image exists: Try <code>docker pull &lt;image&gt;</code>',
+                            'For private registries, check image pull secrets: <code>kubectl get secrets</code>',
+                            'Verify service account has access to image pull secrets',
+                            'Check registry authentication and network connectivity'
+                        ]
+                    },
+                    {
+                        title: 'Level 3 Hints (Deep Debugging)',
+                        hints: [
+                            'Check node ability to reach registry: Network policies, firewalls',
+                            'Verify image pull secret format: <code>kubectl get secret &lt;secret&gt; -o yaml</code>',
+                            'Check if using correct registry URL (especially for ECR)',
+                            'For ECR: Verify IAM permissions and token expiration'
+                        ]
+                    }
+                ]
+            }
+        };
+        
+        const data = hintsData[scenarioName];
+        if (!data) return '<h2>No hints available for this scenario</h2>';
+        
+        let html = `<h2 style="color: #2c3e50; margin-bottom: 20px;">${data.title}</h2>`;
+        
+        data.levels.forEach((level, index) => {
+            const colors = ['#28a745', '#17a2b8', '#6f42c1'];
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: ${colors[index]}; margin-bottom: 15px;">${level.title}</h3>
+                    <ul style="list-style: none; padding: 0;">
+            `;
+            
+            level.hints.forEach((hint, hintIndex) => {
+                html += `
+                    <li style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid ${colors[index]};">
+                        <strong>💡 Hint ${index * 4 + hintIndex + 1}:</strong> ${hint}
+                    </li>
+                `;
+            });
+            
+            html += '</ul></div>';
+        });
+        
+        html += `
+            <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                <strong>🎓 Learning Tip:</strong> Work through hints progressively. Try Level 1 first!<br>
+                <strong>🚀 Need Solutions?</strong> Run: <code>./scenario-manager.sh run ${scenarioName} restore</code>
+            </div>
+        `;
+        
+        return html;
+    }
+    
     showCommand(command) {
         // Create a temporary notification
         const notification = document.createElement('div');
@@ -274,6 +531,10 @@ function startScenario(scenarioName) {
 
 function checkStatus(scenarioName) {
     window.progressTracker.checkStatus(scenarioName);
+}
+
+function showHints(scenarioName) {
+    window.progressTracker.showHints(scenarioName);
 }
 
 // Add CSS animations

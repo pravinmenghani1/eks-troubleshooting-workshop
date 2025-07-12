@@ -179,6 +179,7 @@ By completing this workshop, you'll master:
 - **Victory Celebrations** - Animated success messages
 - **Progress Tracking** - Visual completion status
 - **Real-time Portal** - Web-based progress dashboard
+- **Progressive Hints** - Multi-level hint system when stuck
 
 ## 📊 Progress Portal
 
@@ -202,6 +203,36 @@ Experience real-time progress tracking with our web-based portal:
 
 The portal runs locally on `http://localhost:8080` and provides a beautiful dashboard to track your troubleshooting journey!
 
+## 💡 Progressive Hint System
+
+Never get completely stuck! Our intelligent hint system provides progressive guidance:
+
+### 🎯 **Three-Level Hint System**
+- **Level 1 (Start Here)** - Basic troubleshooting steps and essential commands
+- **Level 2 (If Still Stuck)** - Intermediate debugging techniques and specific checks
+- **Level 3 (Deep Debugging)** - Advanced troubleshooting and root cause analysis
+
+### 🚀 **How to Use Hints**
+```bash
+# Get hints for any scenario
+./scenario-manager.sh hint pod-startup-failures
+./scenario-manager.sh hint dns-issues
+./scenario-manager.sh hint rbac-issues
+
+# Or use the interactive mode
+./scenario-manager.sh
+# Then select option 5 for hints
+```
+
+### 🎨 **Visual Hint Features**
+- **Progressive Disclosure** - Start with simple hints, progress to advanced
+- **Color-coded Levels** - Easy to distinguish difficulty levels
+- **Command Examples** - Copy-paste ready kubectl commands
+- **Learning Tips** - Educational insights for each scenario
+- **Solution Links** - Direct path to solutions when needed
+
+The hint system is also integrated into the web portal with beautiful modal displays!
+
 ## 🔧 Advanced Usage
 
 ### 🎯 **Command Line Interface**
@@ -214,6 +245,9 @@ The portal runs locally on `http://localhost:8080` and provides a beautiful dash
 
 # Check scenario status
 ./scenario-manager.sh status dns-issues
+
+# Get progressive hints (NEW!)
+./scenario-manager.sh hint pod-startup-failures
 
 # Restore/fix scenario
 ./scenario-manager.sh run rbac-issues restore

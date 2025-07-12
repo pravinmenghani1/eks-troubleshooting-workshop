@@ -360,6 +360,296 @@ launch_progress_portal_if_needed() {
         fi
     fi
 }
+
+# Progressive hint system
+show_hints() {
+    local scenario=$1
+    local scenario_info=$(get_scenario_info "$scenario")
+    IFS='|' read -r title difficulty description duration <<< "$scenario_info"
+    
+    print_section_header "💡 PROGRESSIVE HINTS FOR $title"
+    
+    case $scenario in
+        "pod-startup-failures")
+            show_pod_startup_hints
+            ;;
+        "dns-issues")
+            show_dns_hints
+            ;;
+        "rbac-issues")
+            show_rbac_hints
+            ;;
+        "node-not-ready")
+            show_node_hints
+            ;;
+        "image-pull-errors")
+            show_image_pull_hints
+            ;;
+        *)
+            print_error "No hints available for scenario: $scenario"
+            ;;
+    esac
+}
+
+# Pod Startup Failures Hints
+show_pod_startup_hints() {
+    echo -e "${YELLOW}${BOLD}🐛 Pod Startup Failures - Progressive Hints${NC}\n"
+    
+    echo -e "${CYAN}${BOLD}Level 1 Hints (Start Here):${NC}"
+    echo -e "${GREEN}💡 Hint 1:${NC} Always start with 'kubectl get pods -A' to see the overall status"
+    echo -e "${GREEN}💡 Hint 2:${NC} Look for pods in 'Pending', 'ImagePullBackOff', or 'CrashLoopBackOff' states"
+    echo -e "${GREEN}💡 Hint 3:${NC} Use 'kubectl describe pod <pod-name>' to get detailed information"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 2 Hints (If Still Stuck):${NC}"
+    echo -e "${BLUE}🔍 Hint 4:${NC} Check events with 'kubectl get events --sort-by=.metadata.creationTimestamp'"
+    echo -e "${BLUE}🔍 Hint 5:${NC} For ImagePullBackOff: Check image name, registry access, and credentials"
+    echo -e "${BLUE}🔍 Hint 6:${NC} For Pending pods: Check node resources with 'kubectl top nodes'"
+    echo -e "${BLUE}🔍 Hint 7:${NC} For CrashLoopBackOff: Check logs with 'kubectl logs <pod-name>'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 3 Hints (Deep Debugging):${NC}"
+    echo -e "${PURPLE}🎯 Hint 8:${NC} Check resource requests/limits in pod specifications"
+    echo -e "${PURPLE}🎯 Hint 9:${NC} Verify secrets exist: 'kubectl get secrets'"
+    echo -e "${PURPLE}🎯 Hint 10:${NC} Check node selectors and taints: 'kubectl describe nodes'"
+    echo -e "${PURPLE}🎯 Hint 11:${NC} For persistent issues, check admission controllers and policies"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Common Commands for This Scenario:${NC}"
+    cat << 'EOF'
+# Essential debugging commands
+kubectl get pods -A -o wide
+kubectl describe pod <pod-name> -n <namespace>
+kubectl logs <pod-name> -n <namespace>
+kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl top nodes
+kubectl top pods -A
+kubectl get secrets -A
+kubectl describe nodes
+
+# Check specific issues
+kubectl get pods --field-selector=status.phase=Pending
+kubectl get pods --field-selector=status.phase=Failed
+EOF
+    
+    echo ""
+    echo -e "${YELLOW}${BOLD}🎓 Learning Tip:${NC} Work through hints progressively. Try Level 1 first!"
+    echo -e "${GREEN}${BOLD}🚀 Need Solutions?${NC} Run: ./scenario-manager.sh run pod-startup-failures restore"
+}
+
+# DNS Issues Hints
+show_dns_hints() {
+    echo -e "${YELLOW}${BOLD}🌐 DNS Resolution Apocalypse - Progressive Hints${NC}\n"
+    
+    echo -e "${CYAN}${BOLD}Level 1 Hints (Start Here):${NC}"
+    echo -e "${GREEN}💡 Hint 1:${NC} Test DNS resolution with a debug pod: 'kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup kubernetes.default'"
+    echo -e "${GREEN}💡 Hint 2:${NC} Check CoreDNS pods status: 'kubectl get pods -n kube-system -l k8s-app=kube-dns'"
+    echo -e "${GREEN}💡 Hint 3:${NC} Look at CoreDNS logs: 'kubectl logs -n kube-system -l k8s-app=kube-dns'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 2 Hints (If Still Stuck):${NC}"
+    echo -e "${BLUE}🔍 Hint 4:${NC} Check CoreDNS configuration: 'kubectl get configmap coredns -n kube-system -o yaml'"
+    echo -e "${BLUE}🔍 Hint 5:${NC} Verify service endpoints: 'kubectl get endpoints'"
+    echo -e "${BLUE}🔍 Hint 6:${NC} Test service discovery: 'kubectl run test --image=busybox --rm -it --restart=Never -- nslookup <service-name>'"
+    echo -e "${BLUE}🔍 Hint 7:${NC} Check network policies: 'kubectl get networkpolicies -A'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 3 Hints (Deep Debugging):${NC}"
+    echo -e "${PURPLE}🎯 Hint 8:${NC} Check kube-dns service: 'kubectl get svc kube-dns -n kube-system'"
+    echo -e "${PURPLE}🎯 Hint 9:${NC} Verify DNS policy in pods: Look for 'dnsPolicy' in pod specs"
+    echo -e "${PURPLE}🎯 Hint 10:${NC} Check cluster DNS settings: 'kubectl get nodes -o yaml | grep -A 5 -B 5 dns'"
+    echo -e "${PURPLE}🎯 Hint 11:${NC} Test external DNS: 'kubectl run test --image=busybox --rm -it --restart=Never -- nslookup google.com'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Common Commands for This Scenario:${NC}"
+    cat << 'EOF'
+# DNS testing commands
+kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup kubernetes.default
+kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup google.com
+kubectl run dns-test --image=busybox --rm -it --restart=Never -- cat /etc/resolv.conf
+
+# CoreDNS debugging
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns
+kubectl get configmap coredns -n kube-system -o yaml
+kubectl get svc kube-dns -n kube-system
+
+# Service discovery
+kubectl get services -A
+kubectl get endpoints -A
+kubectl describe svc <service-name>
+
+# Network policies
+kubectl get networkpolicies -A
+kubectl describe networkpolicy <policy-name>
+EOF
+    
+    echo ""
+    echo -e "${YELLOW}${BOLD}🎓 Learning Tip:${NC} DNS issues often involve CoreDNS configuration or network policies!"
+    echo -e "${GREEN}${BOLD}🚀 Need Solutions?${NC} Run: ./scenario-manager.sh run dns-issues restore"
+}
+
+# RBAC Issues Hints
+show_rbac_hints() {
+    echo -e "${YELLOW}${BOLD}🔐 RBAC Permission Nightmare - Progressive Hints${NC}\n"
+    
+    echo -e "${CYAN}${BOLD}Level 1 Hints (Start Here):${NC}"
+    echo -e "${GREEN}💡 Hint 1:${NC} Test permissions with 'kubectl auth can-i <verb> <resource>'"
+    echo -e "${GREEN}💡 Hint 2:${NC} Check what you can do: 'kubectl auth can-i --list'"
+    echo -e "${GREEN}💡 Hint 3:${NC} Look for 'Forbidden' errors in kubectl output"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 2 Hints (If Still Stuck):${NC}"
+    echo -e "${BLUE}🔍 Hint 4:${NC} Check service accounts: 'kubectl get serviceaccounts -A'"
+    echo -e "${BLUE}🔍 Hint 5:${NC} List roles and role bindings: 'kubectl get roles,rolebindings -A'"
+    echo -e "${BLUE}🔍 Hint 6:${NC} Check cluster roles: 'kubectl get clusterroles,clusterrolebindings'"
+    echo -e "${BLUE}🔍 Hint 7:${NC} Test as specific user: 'kubectl auth can-i <verb> <resource> --as=<user>'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 3 Hints (Deep Debugging):${NC}"
+    echo -e "${PURPLE}🎯 Hint 8:${NC} Describe role bindings: 'kubectl describe rolebinding <binding-name>'"
+    echo -e "${PURPLE}🎯 Hint 9:${NC} Check pod's service account: 'kubectl get pod <pod-name> -o yaml | grep serviceAccount'"
+    echo -e "${PURPLE}🎯 Hint 10:${NC} Verify service account tokens: 'kubectl describe serviceaccount <sa-name>'"
+    echo -e "${PURPLE}🎯 Hint 11:${NC} Check for missing subjects in role bindings"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Common Commands for This Scenario:${NC}"
+    cat << 'EOF'
+# Permission testing
+kubectl auth can-i get pods
+kubectl auth can-i create deployments
+kubectl auth can-i --list
+kubectl auth can-i get pods --as=system:serviceaccount:default:my-sa
+
+# RBAC resources
+kubectl get serviceaccounts -A
+kubectl get roles -A
+kubectl get rolebindings -A
+kubectl get clusterroles
+kubectl get clusterrolebindings
+
+# Detailed inspection
+kubectl describe serviceaccount <sa-name>
+kubectl describe role <role-name>
+kubectl describe rolebinding <binding-name>
+kubectl describe clusterrole <cluster-role-name>
+kubectl describe clusterrolebinding <cluster-binding-name>
+
+# Pod service account
+kubectl get pod <pod-name> -o yaml | grep -A 5 serviceAccount
+EOF
+    
+    echo ""
+    echo -e "${YELLOW}${BOLD}🎓 Learning Tip:${NC} RBAC issues are usually missing role bindings or incorrect service accounts!"
+    echo -e "${GREEN}${BOLD}🚀 Need Solutions?${NC} Run: ./scenario-manager.sh run rbac-issues restore"
+}
+
+# Node Health Hints
+show_node_hints() {
+    echo -e "${YELLOW}${BOLD}🖥️ Node Health Crisis - Progressive Hints${NC}\n"
+    
+    echo -e "${CYAN}${BOLD}Level 1 Hints (Start Here):${NC}"
+    echo -e "${GREEN}💡 Hint 1:${NC} Check node status: 'kubectl get nodes'"
+    echo -e "${GREEN}💡 Hint 2:${NC} Look for 'NotReady' or 'Unknown' node states"
+    echo -e "${GREEN}💡 Hint 3:${NC} Check node details: 'kubectl describe node <node-name>'"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 2 Hints (If Still Stuck):${NC}"
+    echo -e "${BLUE}🔍 Hint 4:${NC} Check node resources: 'kubectl top nodes'"
+    echo -e "${BLUE}🔍 Hint 5:${NC} Look at node conditions in 'kubectl describe node' output"
+    echo -e "${BLUE}🔍 Hint 6:${NC} Check kubelet logs on the node (if accessible)"
+    echo -e "${BLUE}🔍 Hint 7:${NC} Verify node capacity vs allocatable resources"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 3 Hints (Deep Debugging):${NC}"
+    echo -e "${PURPLE}🎯 Hint 8:${NC} Check for resource pressure: disk, memory, PID pressure"
+    echo -e "${PURPLE}🎯 Hint 9:${NC} Look for taints on nodes: 'kubectl describe node | grep -A 5 Taints'"
+    echo -e "${PURPLE}🎯 Hint 10:${NC} Check pod distribution: 'kubectl get pods -A -o wide'"
+    echo -e "${PURPLE}🎯 Hint 11:${NC} Verify cluster autoscaler logs if using autoscaling"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Common Commands for This Scenario:${NC}"
+    cat << 'EOF'
+# Node status
+kubectl get nodes
+kubectl get nodes -o wide
+kubectl describe node <node-name>
+kubectl top nodes
+
+# Resource usage
+kubectl top pods -A
+kubectl describe node <node-name> | grep -A 5 "Allocated resources"
+kubectl get pods -A -o wide --sort-by=.spec.nodeName
+
+# Node conditions and events
+kubectl get events --field-selector involvedObject.kind=Node
+kubectl describe node <node-name> | grep -A 10 Conditions
+kubectl describe node <node-name> | grep -A 5 Taints
+
+# Troubleshooting
+kubectl get pods -A --field-selector=status.phase=Pending
+kubectl get pods -A --field-selector=spec.nodeName=<node-name>
+EOF
+    
+    echo ""
+    echo -e "${YELLOW}${BOLD}🎓 Learning Tip:${NC} Node issues often involve resource exhaustion or kubelet problems!"
+    echo -e "${GREEN}${BOLD}🚀 Need Solutions?${NC} Run: ./scenario-manager.sh run node-not-ready restore"
+}
+
+# Image Pull Errors Hints
+show_image_pull_hints() {
+    echo -e "${YELLOW}${BOLD}📦 Image Registry Disasters - Progressive Hints${NC}\n"
+    
+    echo -e "${CYAN}${BOLD}Level 1 Hints (Start Here):${NC}"
+    echo -e "${GREEN}💡 Hint 1:${NC} Look for 'ImagePullBackOff' or 'ErrImagePull' pod status"
+    echo -e "${GREEN}💡 Hint 2:${NC} Check the exact error: 'kubectl describe pod <pod-name>'"
+    echo -e "${GREEN}💡 Hint 3:${NC} Verify the image name and tag in the pod specification"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 2 Hints (If Still Stuck):${NC}"
+    echo -e "${BLUE}🔍 Hint 4:${NC} Check if image exists: Try pulling manually with 'docker pull <image>'"
+    echo -e "${BLUE}🔍 Hint 5:${NC} For private registries, check image pull secrets: 'kubectl get secrets'"
+    echo -e "${BLUE}🔍 Hint 6:${NC} Verify service account has access to image pull secrets"
+    echo -e "${BLUE}🔍 Hint 7:${NC} Check registry authentication and network connectivity"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Level 3 Hints (Deep Debugging):${NC}"
+    echo -e "${PURPLE}🎯 Hint 8:${NC} Check node's ability to reach registry: Network policies, firewalls"
+    echo -e "${PURPLE}🎯 Hint 9:${NC} Verify image pull secret format: 'kubectl get secret <secret> -o yaml'"
+    echo -e "${PURPLE}🎯 Hint 10:${NC} Check if using correct registry URL (especially for ECR)"
+    echo -e "${PURPLE}🎯 Hint 11:${NC} For ECR: Verify IAM permissions and token expiration"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}Common Commands for This Scenario:${NC}"
+    cat << 'EOF'
+# Image pull debugging
+kubectl get pods --field-selector=status.phase=Pending
+kubectl describe pod <pod-name>
+kubectl get events --field-selector reason=Failed
+
+# Image pull secrets
+kubectl get secrets
+kubectl get secrets -o yaml
+kubectl describe secret <image-pull-secret>
+
+# Service account secrets
+kubectl get serviceaccount <sa-name> -o yaml
+kubectl describe serviceaccount <sa-name>
+
+# Registry testing (if docker available)
+docker pull <image-name>
+docker login <registry-url>
+
+# ECR specific (if using ECR)
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account>.dkr.ecr.<region>.amazonaws.com
+aws ecr describe-repositories
+EOF
+    
+    echo ""
+    echo -e "${YELLOW}${BOLD}🎓 Learning Tip:${NC} Image pull issues are usually authentication or network related!"
+    echo -e "${GREEN}${BOLD}🚀 Need Solutions?${NC} Run: ./scenario-manager.sh run image-pull-errors restore"
+}
+
 cleanup_all() {
     print_section_header "🧹 COMPLETE WORKSHOP CLEANUP"
     
@@ -413,11 +703,12 @@ interactive_mode() {
         echo -e "${GREEN}2.${NC} 🚀 Launch a troubleshooting scenario"
         echo -e "${GREEN}3.${NC} 📊 Check scenario status"
         echo -e "${GREEN}4.${NC} 🏥 Restore/heal a scenario"
-        echo -e "${GREEN}5.${NC} 🧹 Clean up all scenarios"
-        echo -e "${GREEN}6.${NC} 🔍 Run cluster health check"
-        echo -e "${GREEN}7.${NC} 🚪 Exit mission control"
+        echo -e "${GREEN}5.${NC} 💡 Get hints for a scenario"
+        echo -e "${GREEN}6.${NC} 🧹 Clean up all scenarios"
+        echo -e "${GREEN}7.${NC} 🔍 Run cluster health check"
+        echo -e "${GREEN}8.${NC} 🚪 Exit mission control"
         
-        echo -e "\n${PURPLE}${BOLD}Enter your choice (1-7):${NC} "
+        echo -e "\n${PURPLE}${BOLD}Enter your choice (1-8):${NC} "
         read -r choice
         
         case $choice in
@@ -464,12 +755,25 @@ interactive_mode() {
                 fi
                 ;;
             5)
-                cleanup_all
+                echo ""
+                list_scenarios
+                echo -e "${YELLOW}${BOLD}Enter scenario number for hints:${NC} "
+                read -r scenario_num
+                
+                if [[ "$scenario_num" =~ ^[1-9][0-9]*$ ]] && [ "$scenario_num" -le "${#SCENARIOS[@]}" ]; then
+                    local scenario="${SCENARIOS[$((scenario_num - 1))]}"
+                    show_hints "$scenario"
+                else
+                    print_error "Invalid scenario number"
+                fi
                 ;;
             6)
-                ./troubleshooting-toolkit.sh
+                cleanup_all
                 ;;
             7)
+                ./troubleshooting-toolkit.sh
+                ;;
+            8)
                 echo -e "\n${GREEN}${BOLD}${ROCKET} Thank you for using the EKS Troubleshooting Workshop! ${ROCKET}${NC}"
                 echo -e "${CYAN}May your pods always be Running and your DNS always resolve! 🌟${NC}"
                 exit 0
@@ -498,6 +802,7 @@ ${YELLOW}${BOLD}COMMANDS:${NC}
   ${GREEN}list${NC}                          📋 List all available scenarios
   ${GREEN}run <scenario> <action>${NC}       🚀 Run a specific scenario with action
   ${GREEN}status <scenario>${NC}             📊 Check status of a scenario
+  ${GREEN}hint <scenario>${NC}               💡 Get progressive hints for a scenario
   ${GREEN}cleanup${NC}                       🧹 Clean up all scenarios
   ${GREEN}interactive${NC}                   🎮 Start interactive mode (recommended)
   ${GREEN}portal${NC}                        📊 Launch progress portal
@@ -525,6 +830,7 @@ ${YELLOW}${BOLD}EXAMPLES:${NC}
   ${CYAN}$0 run pod-startup-failures inject${NC}    💥 Start pod startup scenario
   ${CYAN}$0 run dns-issues restore${NC}             🏥 Fix DNS issues scenario
   ${CYAN}$0 status pod-startup-failures${NC}        📊 Check pod scenario status
+  ${CYAN}$0 hint pod-startup-failures${NC}          💡 Get hints for pod issues
   ${CYAN}$0 portal${NC}                             📊 Launch progress portal
   ${CYAN}$0 interactive${NC}                        🎮 Launch mission control center
 
@@ -581,6 +887,15 @@ main() {
             ;;
         "portal")
             launch_progress_portal
+            ;;
+        "hint")
+            # Provide hints for scenarios
+            if [ $# -lt 2 ]; then
+                print_error "Usage: $0 hint <scenario>"
+                show_help
+                exit 1
+            fi
+            show_hints "$2"
             ;;
         "help"|"-h"|"--help")
             show_help

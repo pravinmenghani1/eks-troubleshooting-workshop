@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: eks-troubleshooting-workshop
+  name: eks-troubleshooting-workshop-v2
   region: us-west-2
   version: "1.33"
 

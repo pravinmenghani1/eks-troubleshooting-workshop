@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-CLUSTER_NAME="eks-troubleshooting-workshop"
+CLUSTER_NAME="eks-troubleshooting-workshop-v2"
 REGION="us-west-2"
 NODE_GROUP_NAME="workshop-nodes"
 KUBERNETES_VERSION="1.33"
@@ -121,7 +121,7 @@ addons:
 
 cloudWatch:
   clusterLogging:
-    enable: ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+    enableTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 EOF
 
     # Create the cluster

@@ -5,6 +5,14 @@
 
 set -e
 
+# Check Bash version compatibility
+if [ "${BASH_VERSION%%.*}" -lt 3 ]; then
+    echo "Error: This script requires Bash 3.0 or higher"
+    echo "Current version: $BASH_VERSION"
+    echo "Please upgrade your Bash version"
+    exit 1
+fi
+
 # Enhanced colors and formatting
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -69,14 +77,38 @@ print_info() {
 }
 
 # Available scenarios with enhanced metadata
-declare -A SCENARIOS
 SCENARIOS=(
-    ["pod-startup-failures"]="🐛 Pod Startup Failures|⭐⭐⭐|Image pulls, resources, secrets, crashes|30 min"
-    ["dns-issues"]="🌐 DNS Resolution Apocalypse|⭐⭐⭐⭐|CoreDNS chaos, network policies, service discovery|25 min"
-    ["rbac-issues"]="🔐 RBAC Permission Nightmare|⭐⭐⭐|Role bindings, service accounts, permissions|20 min"
-    ["node-not-ready"]="🖥️  Node Health Crisis|⭐⭐⭐⭐⭐|Node failures, resource exhaustion, kubelet issues|35 min"
-    ["image-pull-errors"]="📦 Image Registry Disasters|⭐⭐|Private registries, authentication, network issues|15 min"
+    "pod-startup-failures"
+    "dns-issues"
+    "rbac-issues"
+    "node-not-ready"
+    "image-pull-errors"
 )
+
+# Function to get scenario metadata
+get_scenario_info() {
+    local scenario=$1
+    case $scenario in
+        "pod-startup-failures")
+            echo "🐛 Pod Startup Failures|⭐⭐⭐|Image pulls, resources, secrets, crashes|30 min"
+            ;;
+        "dns-issues")
+            echo "🌐 DNS Resolution Apocalypse|⭐⭐⭐⭐|CoreDNS chaos, network policies, service discovery|25 min"
+            ;;
+        "rbac-issues")
+            echo "🔐 RBAC Permission Nightmare|⭐⭐⭐|Role bindings, service accounts, permissions|20 min"
+            ;;
+        "node-not-ready")
+            echo "🖥️  Node Health Crisis|⭐⭐⭐⭐⭐|Node failures, resource exhaustion, kubelet issues|35 min"
+            ;;
+        "image-pull-errors")
+            echo "📦 Image Registry Disasters|⭐⭐|Private registries, authentication, network issues|15 min"
+            ;;
+        *)
+            echo "Unknown Scenario|⭐|Unknown|Unknown"
+            ;;
+    esac
+}
 
 # Check if cluster is available with style
 check_cluster() {
@@ -129,8 +161,9 @@ list_scenarios() {
     echo -e "${YELLOW}${BOLD}Choose your chaos level and begin your debugging journey!${NC}\n"
     
     local counter=1
-    for scenario in "${!SCENARIOS[@]}"; do
-        IFS='|' read -r title difficulty description duration <<< "${SCENARIOS[$scenario]}"
+    for scenario in "${SCENARIOS[@]}"; do
+        local scenario_info=$(get_scenario_info "$scenario")
+        IFS='|' read -r title difficulty description duration <<< "$scenario_info"
         
         echo -e "${CYAN}${BOLD}[$counter] $title${NC}"
         echo -e "    ${PURPLE}Difficulty: $difficulty${NC}"
@@ -148,13 +181,23 @@ run_scenario() {
     local scenario=$1
     local action=$2
     
-    if [[ ! " ${!SCENARIOS[@]} " =~ " ${scenario} " ]]; then
+    # Check if scenario exists
+    local scenario_exists=false
+    for s in "${SCENARIOS[@]}"; do
+        if [ "$s" = "$scenario" ]; then
+            scenario_exists=true
+            break
+        fi
+    done
+    
+    if [ "$scenario_exists" = false ]; then
         print_error "Unknown scenario: $scenario"
         list_scenarios
         exit 1
     fi
     
-    IFS='|' read -r title difficulty description duration <<< "${SCENARIOS[$scenario]}"
+    local scenario_info=$(get_scenario_info "$scenario")
+    IFS='|' read -r title difficulty description duration <<< "$scenario_info"
     local scenario_dir="scenarios/$scenario"
     
     if [ ! -d "$scenario_dir" ]; then
@@ -232,7 +275,8 @@ EOF
 # Enhanced status checking with visual dashboard
 check_scenario_status() {
     local scenario=$1
-    IFS='|' read -r title difficulty description duration <<< "${SCENARIOS[$scenario]}"
+    local scenario_info=$(get_scenario_info "$scenario")
+    IFS='|' read -r title difficulty description duration <<< "$scenario_info"
     
     echo -e "${CYAN}${BOLD}Checking status for: $title${NC}\n"
     
@@ -351,8 +395,7 @@ interactive_mode() {
                 read -r scenario_num
                 
                 if [[ "$scenario_num" =~ ^[1-9][0-9]*$ ]] && [ "$scenario_num" -le "${#SCENARIOS[@]}" ]; then
-                    local scenarios_array=($(printf '%s\n' "${!SCENARIOS[@]}" | sort))
-                    local scenario="${scenarios_array[$((scenario_num - 1))]}"
+                    local scenario="${SCENARIOS[$((scenario_num - 1))]}"
                     run_scenario "$scenario" "inject"
                 else
                     print_error "Invalid scenario number"
@@ -365,8 +408,7 @@ interactive_mode() {
                 read -r scenario_num
                 
                 if [[ "$scenario_num" =~ ^[1-9][0-9]*$ ]] && [ "$scenario_num" -le "${#SCENARIOS[@]}" ]; then
-                    local scenarios_array=($(printf '%s\n' "${!SCENARIOS[@]}" | sort))
-                    local scenario="${scenarios_array[$((scenario_num - 1))]}"
+                    local scenario="${SCENARIOS[$((scenario_num - 1))]}"
                     check_scenario_status "$scenario"
                 else
                     print_error "Invalid scenario number"
@@ -379,8 +421,7 @@ interactive_mode() {
                 read -r scenario_num
                 
                 if [[ "$scenario_num" =~ ^[1-9][0-9]*$ ]] && [ "$scenario_num" -le "${#SCENARIOS[@]}" ]; then
-                    local scenarios_array=($(printf '%s\n' "${!SCENARIOS[@]}" | sort))
-                    local scenario="${scenarios_array[$((scenario_num - 1))]}"
+                    local scenario="${SCENARIOS[$((scenario_num - 1))]}"
                     run_scenario "$scenario" "restore"
                 else
                     print_error "Invalid scenario number"
@@ -428,8 +469,9 @@ ${YELLOW}${BOLD}COMMANDS:${NC}
 ${YELLOW}${BOLD}SCENARIOS:${NC}
 EOF
 
-    for scenario in "${!SCENARIOS[@]}"; do
-        IFS='|' read -r title difficulty description duration <<< "${SCENARIOS[$scenario]}"
+    for scenario in "${SCENARIOS[@]}"; do
+        local scenario_info=$(get_scenario_info "$scenario")
+        IFS='|' read -r title difficulty description duration <<< "$scenario_info"
         echo -e "  ${GREEN}$scenario${NC}  $title"
     done
 
@@ -463,14 +505,13 @@ EOF
 
 # Main execution with enhanced error handling
 main() {
-    # Check cluster connectivity first
-    check_cluster
-    
     case "${1:-interactive}" in
         "list")
             list_scenarios
             ;;
         "run")
+            # Check cluster connectivity for run commands
+            check_cluster
             if [ $# -lt 3 ]; then
                 print_error "Usage: $0 run <scenario> <action>"
                 show_help
@@ -479,6 +520,8 @@ main() {
             run_scenario "$2" "$3"
             ;;
         "status")
+            # Check cluster connectivity for status commands
+            check_cluster
             if [ $# -lt 2 ]; then
                 print_error "Usage: $0 status <scenario>"
                 show_help
@@ -487,9 +530,13 @@ main() {
             check_scenario_status "$2"
             ;;
         "cleanup")
+            # Check cluster connectivity for cleanup
+            check_cluster
             cleanup_all
             ;;
         "interactive")
+            # Check cluster connectivity for interactive mode
+            check_cluster
             interactive_mode
             ;;
         "help"|"-h"|"--help")
@@ -497,6 +544,8 @@ main() {
             ;;
         *)
             if [ $# -eq 0 ]; then
+                # Check cluster connectivity for default interactive mode
+                check_cluster
                 interactive_mode
             else
                 print_error "Unknown command: $1"
